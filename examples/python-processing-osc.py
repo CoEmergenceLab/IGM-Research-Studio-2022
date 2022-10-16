@@ -1,3 +1,8 @@
+"""
+Accepts OSC messages and echo's them back.
+Meant to works with the KeyboardInputOSC Processing sketch.
+"""
+
 import argparse
 import threading
 import sys
