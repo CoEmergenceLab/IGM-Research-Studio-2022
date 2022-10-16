@@ -1,6 +1,6 @@
 """
 Accepts OSC messages and echo's them back.
-Meant to works with the KeyboardInputOSC Processing sketch.
+Meant to work with the KeyboardInputOSC Processing sketch.
 """
 
 import argparse
@@ -36,9 +36,8 @@ def send_response(address, val):
 
 
 def main():
-    # listen to addresses and print changes in values
     # The dispatcher maps OSC addresses to functions and calls the functions with the messages’ arguments.
-    # Function can also be mapped to wildcard addresses (*).
+    # Function can also be mapped to wildcard addresses (e.g.: "/keyboard*").
     dispatcher.map("/keyboard", send_response)
 
 
