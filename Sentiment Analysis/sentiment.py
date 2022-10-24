@@ -6,9 +6,9 @@ from pythonosc import udp_client
 from pythonosc import osc_message_builder
 from pythonosc.dispatcher import Dispatcher
 
-from csa.src.corpusReader import corpusReader
-
 import wx
+
+import requests
 
 def send_message(val, address="/sentiment"):
     msg = osc_message_builder.OscMessageBuilder(address=address)
@@ -16,29 +16,29 @@ def send_message(val, address="/sentiment"):
     oscClient.send(msg.build())
 
 def sentiment_analysis(data):
-    sentiment = sentiment_pipeline(data)
+    # sentiment = sentiment_pipeline(data)
+    payload = dict(inputs=data, options=dict(wait_for_model=True))
+    response = requests.post(HUGURL, headers=headers, json=payload)
+    sentiment = response.json()
     archive.append(Sentence(data, sentiment[0]))
 
-    print(sentiment[0])
+    sentiment = sentiment[0]
 
-    send_message("{},{},{}".format(sentiment[0]["label"], sentiment[0]["score"], data))
+    jsonString = "\"POS\":\"{}\",\"NEU\":\"{}\",\"NEG\":\"{}\",\"input\":\"{}\"".format(sentiment[0]["score"], sentiment[1]["score"], sentiment[2]["score"], data)
+
+    print(jsonString)
+
+    send_message(jsonString)
 
 
 def build_app():
-    class MyFrame(wx.Frame):
-        def __init__(self, parent, title, size):
-            wx.Frame.__init__(self, parent, title=title, size=size)
-            self.CreateStatusBar()
+    class MainPanel(wx.Panel):
+        def __init__(self, parent):
+            wx.Panel.__init__(self, parent=parent)
+            self.SetBackgroundStyle(wx.BG_STYLE_ERASE)
+            self.frame = parent
 
-            filemenu = wx.Menu()
-
-            menuExit = filemenu.Append(wx.ID_EXIT,"E&xit", "Terminate the program")
-            self.Bind(wx.EVT_MENU, self.OnExit, menuExit)
-
-            menuBar = wx.MenuBar()
-            menuBar.Append(filemenu, "&File")
-            self.SetMenuBar(menuBar)
-
+            # Create the controls
             self.sizer = wx.BoxSizer(wx.VERTICAL)
             text = wx.StaticText(self)
             text.SetLabel("Enter your message:")
@@ -54,10 +54,17 @@ def build_app():
             self.SetAutoLayout(1)
             self.sizer.Fit(self)
 
-            self.Show(True)
+        def OnEraseBackground(self, evt):
+            print("hi")
+            dc = evt.GetDC()
 
-        def OnExit(self, e):
-            self.Close(True)
+            if not dc:
+                dc = wx.ClientDC(self)
+                rect = self.GetUpdateRegion().GetBox()
+                dc.SetClippingRect(rect)
+            dc.Clear()
+            bmp = wx.Bitmap("plant_ui.png")
+            dc.DrawBitmap(bmp, 0, 0)
 
         def OnSend(self, e):
             test = self.GetText()
@@ -74,6 +81,28 @@ def build_app():
 
             return text
 
+    class MyFrame(wx.Frame):
+        def __init__(self, parent, title, size):
+            wx.Frame.__init__(self, parent, title=title, size=size)
+            self.CreateStatusBar()
+
+            filemenu = wx.Menu()
+
+            menuExit = filemenu.Append(wx.ID_EXIT,"E&xit", "Terminate the program")
+            self.Bind(wx.EVT_MENU, self.OnExit, menuExit)
+
+            menuBar = wx.MenuBar()
+            menuBar.Append(filemenu, "&File")
+            self.SetMenuBar(menuBar)
+
+            panel = MainPanel(self)
+            self.Center()
+
+            self.Show(True)
+
+        def OnExit(self, e):
+            self.Close(True)
+
 
     app = wx.App(False)
     frame = MyFrame(None, "Plant Messenger", wx.Size(1080, 720))
@@ -88,7 +117,10 @@ if __name__ == "__main__":
     dispatcher = Dispatcher()
     oscClient = udp_client.UDPClient(args.serverip, args.serverport)
 
-    sentiment_pipeline = pipeline(model="pysentimiento/robertuito-sentiment-analysis")
+    HUGURL = "https://api-inference.huggingface.co/models/pysentimiento/robertuito-sentiment-analysis"
+    headers = {"Authorization": f"Bearer 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"}
+
+    # sentiment_pipeline = pipeline(model="pysentimiento/robertuito-sentiment-analysis")
     data = ""
     archive = []
 
@@ -99,6 +131,3 @@ if __name__ == "__main__":
             self.sentiment = sentiment
     
     build_app()
-
-    corpus = corpusReader.read_corpus()
-    print(corpus)
