@@ -24,11 +24,13 @@ def sentiment_analysis(data):
 
     sentiment = sentiment[0]
 
+    print(sentiment[0]['score'])
+
     jsonString = "\"POS\":\"{}\",\"NEU\":\"{}\",\"NEG\":\"{}\",\"input\":\"{}\"".format(sentiment[0]["score"], sentiment[1]["score"], sentiment[2]["score"], data)
 
     print(jsonString)
 
-    send_message(jsonString)
+    send_message("{" + jsonString + "}")
 
 
 def build_app():
