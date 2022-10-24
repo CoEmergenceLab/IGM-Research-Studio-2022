@@ -22,8 +22,8 @@ int touch;
 OscP5 oscP5;
 NetAddress myRemoteLocation;
 static final String ip = "127.0.0.1";
-static final int sendPort = 57000;
-static final int receivePort = 57001;
+//static final int sendPort = 57000;
+static final int receivePort = 57000;
 
 static final String oscAddress = "/sentiment";
 
@@ -69,7 +69,7 @@ void setup() {
    * oscP5.send() when sending osc packets to another computer, device, 
    * application.
    */
-  myRemoteLocation = new NetAddress(ip, sendPort);
+  //myRemoteLocation = new NetAddress(ip, sendPort);
   counter = 0;
   
   int numSpots = 25; // Number of objects
@@ -85,7 +85,8 @@ void setup() {
   
   //Moisture
   frameRate(30);
-  colorMode(RGB, 255, 0, 0, 100);
+  //colorMode(RGB, 255, 0, 0, 100);
+  fill(0,0,255);
   w = width + 16;
 
   for (int i = 0; i < maxwaves; i++) {
@@ -110,23 +111,35 @@ void draw() {
   
   //text(keyboardInput, 25, 50);
   // Draw the letter to the center of the screen
-  textSize(14);
-  text("Current key: " + letter, 1600, 700);
-  text("The String is " + words.length() +  " characters long", 1600, 730);
+  //textSize(20);
+  //text("Current key: " + letter, 1600, 700);
+  //text("The String is " + words.length() +  " characters long", 1600, 730);
   
   textSize(24);
   text(words, 800, 660);
   
   if(count>0){
-    for(int i = 0; i<count; i++) {
+    for(int i = 0; i < count; i++) {
       String item = textLog.get(i);
-      if(textLog.size() > 5) {
+      if(textLog.size() > 11) {
         textLog.remove(0);
         count -= 1;
       }
-      text(item, 1600, 760 + (i * 30 ));
-    }
-  }
+      
+      if(item.length() > 70){
+        //if(item.length() > 25){//mmmmmmmmmm
+        //  char[] c = item.toCharArray();
+        //  if(item.length()>50){
+        //    text(item, width*.8, height*.75+(i*30));
+        //  }else{
+        //    text(item, width*.8, height*.75+(i*30));
+        //  }
+        }else{
+          text(item, width*.8, height*.75+(i*30));
+        }
+      //}//if length
+    }//if count>0
+  }//draw
   
   //spots
   fill(0, 12);
@@ -164,35 +177,71 @@ void draw() {
 void loadData() {
   //parse JsonObject
   json = parseJSONObject(val);
-  jsonSenti = parseJSONObject(val);
   
   //Get and print values
-  moisture = json.getInt("moisture");
-  println("Moisture Level: " + moisture);
-  light = (int)json.get("light");
-  println("Light Intensity: " + light);
-  touch = (int)json.get("touch");
-  println("Number of Times Touched: " + touch);
+  //moisture = json.getInt("moisture");
+  //println("Moisture Level: " + moisture);
+  //light = (int)json.get("light");
+  //println("Light Intensity: " + light);
+  //touch = (int)json.get("touch");
+  //println("Number of Times Touched: " + touch);
   
 }
 
-void keyTyped() {
-  // The variable "key" always contains the value 
-  // of the most recent key pressed.
-  if ((key >= 'A' && key <= 'z') || key == ' ') {
-    letter = key;
-    words = words + key;
-    // Write the letter to the console
-    println(key);
-  }
+/* incoming osc message are forwarded to the oscEvent method. */
+void oscEvent(OscMessage theOscMessage) {
+  print("### received an osc message.");
+  print(" addrpattern: " + theOscMessage.addrPattern());
+  println(" typetag: " + theOscMessage.typetag());
   
-  // Save the message to log
-  if(key == ENTER) {
-    count += 1;
-    textLog.append(words);
-    words = "";
-  }
+  /* check if theOscMessage has the address pattern we are looking for. */
+  if(theOscMessage.checkAddrPattern("/sentiment") == true) {
+    /* check if the typetag is the right one. 
+       "ifs" means integer, float, string respectively
+       we are expecting a two strings in this case, so it's "ss"
+       more info here:
+       https://sojamo.de/libraries/oscp5/examples/oscP5parsing/oscP5parsing.pde
+    */
+    if(theOscMessage.checkTypetag("s")) {
+      /* parse theOscMessage and extract the values from the osc message arguments. */
+     //positive, neutral, negative sentiments
+      String s = theOscMessage.get(0).stringValue();
+      println(s);
+      
+      //split string into values
+      jsonSenti = parseJSONObject(s);
+      println(jsonSenti);
+       
+      String pos = jsonSenti.getString("POS");
+      String neu = jsonSenti.getString("NEU");
+      String neg = jsonSenti.getString("NEG");
+      String input = jsonSenti.getString("input");
+      
+      textLog.append(input);
+      count += 1;
+      
+      return;
+    }  
+  } 
 }
+
+//void keyTyped() {
+//  // The variable "key" always contains the value 
+//  // of the most recent key pressed.
+//  if ((key >= 'A' && key <= 'z') || key == ' ') {
+//    letter = key;
+//    words = words + key;
+//    // Write the letter to the console
+//    println(key);
+//  }
+  
+//  // Save the message to log
+//  if(key == ENTER) {
+//    count += 1;
+//    textLog.append(words);
+//    words = "";
+//  }
+//}
 
 class Spot {
   float x, y;         // X-coordinate, y-coordinate
@@ -234,34 +283,6 @@ void star(float x, float y, float radius1, float radius2, int npoints) {
     vertex(sx, sy);
   }
   endShape(CLOSE);
-}
-
-/* incoming osc message are forwarded to the oscEvent method. */
-void oscEvent(OscMessage theOscMessage) {
-  print("### received an osc message.");
-  print(" addrpattern: " + theOscMessage.addrPattern());
-  println(" typetag: " + theOscMessage.typetag());
-  
-  /* check if theOscMessage has the address pattern we are looking for. */
-  if(theOscMessage.checkAddrPattern("/sentiment") == true) {
-    /* check if the typetag is the right one. 
-       "ifs" means integer, float, string respectively
-       we are expecting a two strings in this case, so it's "ss"
-       more info here:
-       https://sojamo.de/libraries/oscp5/examples/oscP5parsing/oscP5parsing.pde
-    */
-    if(theOscMessage.checkTypetag("ss")) {
-      /* parse theOscMessage and extract the values from the osc message arguments. */
-     //positive, neutral, negative sentiments
-      String s0 = theOscMessage.get(0).stringValue();
-      print(s0);
-      
-      //split string into values
-      
-      
-      return;
-    }  
-  } 
 }
 
 //Calculate height and frequency of wave
