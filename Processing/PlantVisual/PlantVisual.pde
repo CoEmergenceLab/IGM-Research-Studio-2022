@@ -5,10 +5,10 @@
 import processing.serial.*;
 import oscP5.*;  
 import netP5.*;
+import java.util.Random;
 
 Serial plantPort;
 String val;
-String valSenti;
 
 // A JSON object
 JSONObject json;
@@ -24,7 +24,6 @@ NetAddress myRemoteLocation;
 static final String ip = "127.0.0.1";
 //static final int sendPort = 57000;
 static final int receivePort = 57000;
-
 static final String oscAddress = "/sentiment";
 
 //Text Log
@@ -33,6 +32,11 @@ String keyboardInput = "";
 char letter;
 String words = "";
 int count;
+
+//Sentiment values
+float stars;
+float circles;
+float anothers;
 
 Spot[] spots; // Declare array
 int counter;
@@ -50,13 +54,15 @@ float[] amplitude = new float[maxwaves];   // Height of wave
 float[] dx = new float[maxwaves];          // Value for incrementing X, to be calculated as a function of period and xspacing
 float[] yvalues;  
 
+Drops d[];
+
 void setup() {
   //size(1000, 800);
    fullScreen(); 
   
   //Connect to serial port
   println(Serial.list());
-  plantPort = new Serial(this, Serial.list()[1], 9600);
+  //plantPort = new Serial(this, Serial.list()[1], 9600);
   
   textLog = new StringList();
   count=0;
@@ -83,42 +89,53 @@ void setup() {
   }
    noStroke();
   
-  //Moisture
-  frameRate(30);
-  //colorMode(RGB, 255, 0, 0, 100);
-  fill(0,0,255);
-  w = width + 16;
+  ////Moisture
+  //frameRate(30);
+  ////colorMode(RGB, 255, 0, 0, 100);
+  //fill(0,255,255);
+  //w = width + 16;
 
-  for (int i = 0; i < maxwaves; i++) {
-    amplitude[i] = moisture;
-    float period = random(100,300); // How many pixels before the wave repeats
-    dx[i] = (TWO_PI / period) * xspacing;
+  //for (int i = 0; i < maxwaves; i++) {
+  //  amplitude[i] = moisture;
+  //  float period = random(100,300); // How many pixels before the wave repeats
+  //  dx[i] = (TWO_PI / period) * xspacing;
+  //}
+
+  //yvalues = new float[w/xspacing];
+  
+  d=new Drops[500];
+  for(int i=0; i<500;i++){
+    d[i]=new Drops();
   }
-
-  yvalues = new float[w/xspacing];
 }
 
 void draw() {
   background(0);
   
-  if(plantPort.available() > 0){
-    val = plantPort.readStringUntil('\n');
-    //println(val);
-    if(val != null){
-       loadData();
-    }
-  }
+  //if(plantPort.available() > 0){
+  //  val = plantPort.readStringUntil('\n');
+  //  //println(val);
+  //  if(val != null){
+  //     loadData();
+  //  }
+  //}
   
-  //text(keyboardInput, 25, 50);
-  // Draw the letter to the center of the screen
-  //textSize(20);
-  //text("Current key: " + letter, 1600, 700);
-  //text("The String is " + words.length() +  " characters long", 1600, 730);
+  ///Draw Text Log  
+  // Borderbox
+  stroke(255);
+  fill(0);
+  rect(width*.8-20, height*.75-80, 530, 430);
   
-  textSize(24);
-  text(words, 800, 660);
+  // Text
+  textSize(30);
+  fill(255);
+  text("Text Log", width*.8, height*.75-40);
   
+  // Messages
   if(count>0){
+    textSize(24);
+    fill(255,180);
+      
     for(int i = 0; i < count; i++) {
       String item = textLog.get(i);
       if(textLog.size() > 11) {
@@ -141,7 +158,7 @@ void draw() {
     }//if count>0
   }//draw
   
-  //spots
+  // Spots
   fill(0, 12);
   rect(0, 0, width, height);
   fill(0, 0, 255);//color
@@ -150,27 +167,45 @@ void draw() {
     spots[i].display(); // Display each object
   }
   
-  x[indexPos] = mouseX;
-  y[indexPos] = mouseY;
+  // Dots
+  //x[indexPos] = mouseX;
+  //y[indexPos] = mouseY;
   
-  //Negative emotion
-  fill(255);//color
-  indexPos = (indexPos + 1)% num;
-  for (int i = 0; i <num; i++){
-    int pos = (indexPos + i) % num;
-    float radius = (num-i)/2.0;
-    ellipse (x[pos], y[pos], radius, radius);
+  //fill(255);//color
+  //indexPos = (indexPos + 1)% num;
+  //for (int i = 0; i <num; i++){
+  //  int pos = (indexPos + i) % num;
+  //  float radius = (num-i)/2.0;
+  //  ellipse (x[pos], y[pos], radius, radius);
+  //}
+  
+  // Negative emotion
+  if(stars>0){
+    fill(255,0,0);
+    Random rand = new Random();
+    for(int i=0; i<=stars; i++) {
+    
+      int randX = rand.nextInt(1920);
+      int randY = rand.nextInt(1080);
+      
+      pushMatrix();
+      translate(width*0.2, height*0.5);
+      rotate(frameCount / 200.0);
+      star(0,0,5,70, 3); 
+      popMatrix();
+    }
   }
   
-  pushMatrix();
-  translate(width*0.2, height*0.5);
-  rotate(frameCount / 200.0);
-  star(0, 0, 5, 70, 3); 
-  popMatrix();
+  //Additive Wave
+  //calculateWave();
+  //renderWave();
   
-  // Additive Wave
-  calculateWave();
-  renderWave();
+  //Moisture
+  for(int i=0; i<500; i++){
+    d[i].display();
+    if(d[i].y>height)
+    d[i]=new Drops();
+  }
 }
 
 // Load JSON file 
@@ -198,13 +233,10 @@ void oscEvent(OscMessage theOscMessage) {
   if(theOscMessage.checkAddrPattern("/sentiment") == true) {
     /* check if the typetag is the right one. 
        "ifs" means integer, float, string respectively
-       we are expecting a two strings in this case, so it's "ss"
-       more info here:
        https://sojamo.de/libraries/oscp5/examples/oscP5parsing/oscP5parsing.pde
     */
     if(theOscMessage.checkTypetag("s")) {
-      /* parse theOscMessage and extract the values from the osc message arguments. */
-     //positive, neutral, negative sentiments
+      // parse theOscMessage and extract the values from the osc message arguments. 
       String s = theOscMessage.get(0).stringValue();
       println(s);
       
@@ -212,11 +244,20 @@ void oscEvent(OscMessage theOscMessage) {
       jsonSenti = parseJSONObject(s);
       println(jsonSenti);
        
+      // Getting positive, neutral, negative sentiments
       String pos = jsonSenti.getString("POS");
       String neu = jsonSenti.getString("NEU");
       String neg = jsonSenti.getString("NEG");
+      
+      //Parse strings to float
+      circles = Float.parseFloat(pos)*10;
+      anothers = Float.parseFloat(neu)*10;
+      stars = Float.parseFloat(neg)*10;
+      
+      // Text entered
       String input = jsonSenti.getString("input");
       
+      //Add new input to textlog
       textLog.append(input);
       count += 1;
       
@@ -224,24 +265,6 @@ void oscEvent(OscMessage theOscMessage) {
     }  
   } 
 }
-
-//void keyTyped() {
-//  // The variable "key" always contains the value 
-//  // of the most recent key pressed.
-//  if ((key >= 'A' && key <= 'z') || key == ' ') {
-//    letter = key;
-//    words = words + key;
-//    // Write the letter to the console
-//    println(key);
-//  }
-  
-//  // Save the message to log
-//  if(key == ENTER) {
-//    count += 1;
-//    textLog.append(words);
-//    words = "";
-//  }
-//}
 
 class Spot {
   float x, y;         // X-coordinate, y-coordinate
@@ -317,3 +340,24 @@ void renderWave() {
     ellipse(x*xspacing,height/2+yvalues[x],16,16);
   }
 }
+
+class Drops{
+  float x,y,speed;
+  Drop(){
+    x = random(width);
+    y = random(-300,0);
+    speed = random (5,10);
+  }//Drop
+  
+  void update(){
+    y+=speed;
+  }//update
+  
+  void display(){
+    fill(0,0,255);
+    noStroke();
+    rect(x,y,2,15);
+    update();
+  }
+
+}//Drops
