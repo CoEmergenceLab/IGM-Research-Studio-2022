@@ -1,6 +1,6 @@
 import argparse
 
-from transformers import pipeline
+# from transformers import pipeline
 
 from pythonosc import udp_client
 from pythonosc import osc_message_builder
@@ -16,7 +16,6 @@ def send_message(val, address="/sentiment"):
     oscClient.send(msg.build())
 
 def sentiment_analysis(data):
-    # sentiment = sentiment_pipeline(data)
     payload = dict(inputs=data, options=dict(wait_for_model=True))
     response = requests.post(HUGURL, headers=headers, json=payload)
     sentiment = response.json()
@@ -32,6 +31,9 @@ def sentiment_analysis(data):
 
     send_message("{" + jsonString + "}")
 
+def save_data():
+    return True
+
 
 def build_app():
     class MainPanel(wx.Panel):
@@ -40,24 +42,26 @@ def build_app():
             self.SetBackgroundStyle(wx.BG_STYLE_ERASE)
             self.frame = parent
 
-            # Create the controls
-            self.sizer = wx.BoxSizer(wx.VERTICAL)
-            text = wx.StaticText(self)
-            text.SetLabel("Enter your message:")
-            self.sizer.Add(text)
-            self.input = wx.TextCtrl(self, style=wx.TE_MULTILINE, size=wx.Size(800, 200))
-            self.sizer.Add(self.input)
+            sizer = wx.BoxSizer(wx.VERTICAL)
+            hSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-            self.sendButton = wx.Button(self, wx.ID_ANY, "Send")
-            self.Bind(wx.EVT_BUTTON, self.OnSend, self.sendButton)
-            self.sizer.Add(self.sendButton)
+            btn_bmp = wx.Bitmap("plant_ui_button.png")
+            sendButton = wx.BitmapButton(self, id=wx.ID_ANY, bitmap=btn_bmp, pos=(1400,650))
+            self.Bind(wx.EVT_BUTTON, self.OnSend, sendButton)
+            sizer.Add(sendButton, 0, wx.ALL, 5)
 
-            self.SetSizer(self.sizer)
-            self.SetAutoLayout(1)
-            self.sizer.Fit(self)
+            self.input = wx.TextCtrl(self, style=wx.TE_MULTILINE, size=wx.Size(800, 200), pos=(550,600))
+            for _ in range(3):
+                self.input.SetFont(self.input.GetFont().Larger())
+
+            sizer.Add(self.input)
+
+            self.SetSizer(hSizer)
+            self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
+
+            self.Bind(wx.EVT_KEY_DOWN, self.onKey)
 
         def OnEraseBackground(self, evt):
-            print("hi")
             dc = evt.GetDC()
 
             if not dc:
@@ -65,7 +69,10 @@ def build_app():
                 rect = self.GetUpdateRegion().GetBox()
                 dc.SetClippingRect(rect)
             dc.Clear()
-            bmp = wx.Bitmap("plant_ui.png")
+            bmp = wx.Bitmap("plant_ui_base.png")
+            image = wx.ImageFromBitmap(bmp)
+            image = image.Scale(1920, 1080, wx.IMAGE_QUALITY_HIGH)
+            bmp = wx.BitmapFromImage(image)
             dc.DrawBitmap(bmp, 0, 0)
 
         def OnSend(self, e):
@@ -82,33 +89,31 @@ def build_app():
                 text += self.input.GetLineText(i)
 
             return text
+        
+        def onKey(self, event):
+            key_code = event.GetKeyCode()
+            if key_code == wx.WXK_ESCAPE:
+                print("Quit")
+                self.GetParent().Close(True)
+            else:
+                event.Skip()
 
     class MyFrame(wx.Frame):
         def __init__(self, parent, title, size):
             wx.Frame.__init__(self, parent, title=title, size=size)
-            self.CreateStatusBar()
-
-            filemenu = wx.Menu()
-
-            menuExit = filemenu.Append(wx.ID_EXIT,"E&xit", "Terminate the program")
-            self.Bind(wx.EVT_MENU, self.OnExit, menuExit)
-
-            menuBar = wx.MenuBar()
-            menuBar.Append(filemenu, "&File")
-            self.SetMenuBar(menuBar)
 
             panel = MainPanel(self)
             self.Center()
 
-            self.Show(True)
+            self.ShowFullScreen(True)
 
         def OnExit(self, e):
             self.Close(True)
 
 
     app = wx.App(False)
-    frame = MyFrame(None, "Plant Messenger", wx.Size(1080, 720))
-    frame.SetSize(1080, 720)
+    frame = MyFrame(None, "Plant Messenger", wx.Size(1920, 1080))
+    frame.SetSize(1920, 1080)
     app.MainLoop()
 
 if __name__ == "__main__":
@@ -122,7 +127,6 @@ if __name__ == "__main__":
     HUGURL = "https://api-inference.huggingface.co/models/pysentimiento/robertuito-sentiment-analysis"
     headers = {"Authorization": f"Bearer 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"}
 
-    # sentiment_pipeline = pipeline(model="pysentimiento/robertuito-sentiment-analysis")
     data = ""
     archive = []
 
