@@ -46,12 +46,15 @@ def build_app():
             hSizer = wx.BoxSizer(wx.HORIZONTAL)
 
             btn_bmp = wx.Bitmap("plant_ui_button.png")
-            sendButton = wx.BitmapButton(self, id=wx.ID_ANY, bitmap=btn_bmp, pos=(1400,650))
+            sendButton = wx.BitmapButton(self, id=wx.ID_ANY, bitmap=btn_bmp, pos=(1400,595))
             self.Bind(wx.EVT_BUTTON, self.OnSend, sendButton)
             sizer.Add(sendButton, 0, wx.ALL, 5)
 
-            self.input = wx.TextCtrl(self, style=wx.TE_MULTILINE, size=wx.Size(800, 200), pos=(550,600))
-            for _ in range(3):
+            self.input = wx.TextCtrl(self, style=wx.TE_MULTILINE|wx.TE_NO_VSCROLL, size=wx.Size(800, 100), pos=(550,600))
+            self.input.SetMaxLength(70)
+            print(self.input.SetMargins(50))
+            
+            for _ in range(5):
                 self.input.SetFont(self.input.GetFont().Larger())
 
             sizer.Add(self.input)
@@ -70,14 +73,16 @@ def build_app():
                 dc.SetClippingRect(rect)
             dc.Clear()
             bmp = wx.Bitmap("plant_ui_base.png")
-            image = wx.ImageFromBitmap(bmp)
+            image = bmp.ConvertToImage()
             image = image.Scale(1920, 1080, wx.IMAGE_QUALITY_HIGH)
-            bmp = wx.BitmapFromImage(image)
+            bmp = wx.Bitmap(image)
             dc.DrawBitmap(bmp, 0, 0)
 
         def OnSend(self, e):
-            test = self.GetText()
-            sentiment_analysis(test)
+            text = self.GetText().strip()
+            if len(text) == 0:
+                return
+            sentiment_analysis(text)
             self.input.Clear()
 
         def GetText(self):
