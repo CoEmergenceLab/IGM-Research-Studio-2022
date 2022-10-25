@@ -6,4 +6,4 @@ All python packages are best installed in a virtual environment (e.g. Anaconda).
 ```
 conda create -n [name of your environment] python=3.8 ipykernel
 conda activate [name of your environment]
-pip install [package name]
+pip install [package name] OR pip install requirements.txt
