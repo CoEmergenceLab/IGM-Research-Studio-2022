@@ -596,8 +596,7 @@ class Block{
   }//move
   
   void display() {
-    ellipse(x, y, d, d);
-    rect(x,y,d,d,28);
+    rect(x,y,d,d,28); //Rounded Rectangle
   }
 }//Block
 
