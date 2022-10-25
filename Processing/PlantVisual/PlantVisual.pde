@@ -36,7 +36,6 @@ float intensity;
 int glowCount;
 
 //Touch
-int touchCount;
 int prev;
 ArrayList<PShape> smears;
 PShape smear;
@@ -72,14 +71,14 @@ void setup() {
   
   //Connect to serial port
   println(Serial.list());
-  //plantPort = new Serial(this, Serial.list()[1], 9600);
+  plantPort = new Serial(this, Serial.list()[1], 9600);
   
   textLog = new StringList();
   count=0;
   
   //Testing
-  moisture = 0.40;
-  light = 0.8;
+  //moisture = 0.40;
+  //light = 0.8;
   
   glowCount = 0;
   
@@ -96,31 +95,35 @@ void setup() {
   }
   
   ///////////////////Moved to loadJson when connected to arduino
-  d = new Drops[500];  //Replace 500 with moisture
-  for(int i=0; i<500;i++){//Replace 500 with moisture
-    d[i] = new Drops();
-  }
+  //d = new Drops[500];  //Replace 500 with moisture
+  //for(int i=0; i<500;i++){//Replace 500 with moisture
+  //  d[i] = new Drops();
+  //}
   
   //Light
   g = new Glow[16];
   
   //Touch
-  touchCount = 0;
   prev = 0;
   smears = new ArrayList<PShape>();
   smear = loadShape("smear.svg");
+  
+  fill(255);
+  textSize(24);
+  //text("Number of Times Touched: 0", 200, 300);
+  text("Number of Times Touched: 0", width*0.8, height*0.05);
 }
 
 void draw() {
   background(0);
   
-  //if(plantPort.available() > 0){
-  //  val = plantPort.readStringUntil('\n');
-  //  //println(val);
-  //  if(val != null){
-  //     loadData();
-  //  }
-  //}
+  if(plantPort.available() > 0){
+    val = plantPort.readStringUntil('\n');
+    //println(val);
+    if(val != null){
+       loadData();
+    }
+  }
   
   ///Draw Text Log  
   // Borderbox
@@ -196,31 +199,29 @@ void draw() {
   endShape(CLOSE);
   
   //Light - Draw flashing/glowing and slowly fading light
-  //Random r = new Random();
   for(int i=0; i<16;i++){
     g[i] = new Glow(random(width), random(height), random(1));
     glowCount+=1;
-    println(g[i]);
+    //println(g[i]);
     g[i].display();
   }
   
   //Touch
-  touch = 2;//test
+  //touch = 2;//test
   fill(255);
   textSize(24);
     
+  text("Number of Times Touched: " + touch, width*0.8, height*0.05);
+ 
   //Text 
   if(touch>0 &&touch != prev){
     //Smears - Static
-    for(int i=touch-1; i<touch; i++){
       smears.add(smear);
       //shape(pshape name, x, y, width, height)
       shape(smear,random(width), random(height),50,40);
       //text("Number of Times Touched: " + touch, 200, 300;
-      text("Number of Times Touched: " + touch, width*0.9, height*0.05);
+      text("Number of Times Touched: " + touch, width*0.8, height*0.05);
       prev = touch;
-      touchCount += 1;
-    }
   }//text
   
   //Positive Emotion
@@ -271,15 +272,15 @@ void loadData() {
   moisture = json.getFloat("moisture")*100;
   //println("Moisture Level: " + moisture);
   light = json.getFloat("light")*100;
-  //println("Light Intensity: " + light);
-  //touch = json.getInt("touch");
-  //println("Number of Times Touched: " + touch);  //Touch counter = number of smears
+  println("Light Intensity: " + light);
+  touch = json.getInt("touch");
+  println("Number of Times Touched: " + touch);  //Touch counter = number of smears
   
   //Moisture
-  //d=new Drops[moisture];
-  //for(int i=0; i<moisture;i++){
-  //  d[i]=new Drops();
-  //}
+  d=new Drops[int(moisture)];
+  for(int i=0; i<moisture;i++){
+    d[i]=new Drops();
+  }
   
   //Light Intensity
   if(light<=33){  //Low light
@@ -313,19 +314,19 @@ void oscEvent(OscMessage theOscMessage) {
       println(jsonSenti);
        
       // Getting positive, neutral, negative sentiments
-      //String pos = jsonSenti.getString("POS");
-      //String neu = jsonSenti.getString("NEU");
-      //String neg = jsonSenti.getString("NEG");
+      String pos = jsonSenti.getString("POS");
+      String neu = jsonSenti.getString("NEU");
+      String neg = jsonSenti.getString("NEG");
       
-      ////Parse strings to float
-      //circles = Float.parseFloat(pos)*100;
-      //blocks = Float.parseFloat(neu)*100;
-      //stars = Float.parseFloat(neg)*10;
+      //Parse strings to float
+      circles = Float.parseFloat(pos)*100;
+      blocks = Float.parseFloat(neu)*100;
+      stars = Float.parseFloat(neg)*10;
       
       //Test
-      circles = 70;
-      blocks = 20;
-      stars = 10;
+      //circles = 70;
+      //blocks = 20;
+      //stars = 10;
       
       //Positive
       circle = new Circle[int(circles)];
@@ -367,7 +368,7 @@ class Glow{
   
   Glow(float x, float y, float gl){
     loc = new PVector(x,y);
-    println("G: " + gl);
+    //println("G: " + gl);
     if(gl==0){
        glowing = false;
     }else{
@@ -420,13 +421,13 @@ class Drops{
   //Change raining speed based on Moisture data
   void update(){
     //Rain faster when 70% moisture
-    //if(moisture>=66){
-    //   y+=speed;
-    //}else if(moisture<=33) {
-    //   y+=speed;
-    //}else{
+    if(moisture>=66){
+       y+=speed;
+    }else if(moisture<=33) {
+       y+=speed;
+    }else{
       y+=speed;
-    //}
+    }
   }//update
   
   void display(){
