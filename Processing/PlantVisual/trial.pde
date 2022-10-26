@@ -89,6 +89,18 @@ void setup() {
   oscP5 = new OscP5(this, receivePort);
 
   //Moisture
+  //Text and data 1-100
+  //stroke(255);
+  fill(255);
+  textSize(24);
+  
+   //text("HERE", width*0.2, height*0.2);
+  //for(int i=0; i<11; i++) {
+  //  //rect(0, height-(i*10), 530, 430);
+  //  text("HERE" + i*10, width*0.2, height-height*(i*10));
+  //  println("INSIDE");
+  //}
+  
   d = new Drops[500];
   for (int i=0; i<500; i++) {
     d[i] = new Drops();
@@ -122,6 +134,39 @@ void draw() {
   //     loadData();
   //  }
   //}//plantPort
+
+  noStroke();
+  fill(255);
+  textSize(24);  
+   //text("HERE", width*0.2, height*0.2);
+  //for(int i=0; i<11; i++) {
+  //  //rect(0, height-(i*10), 530, 430);
+  //  //text("HERE" + i*10, width*0.2, height-height*(i*10));
+  //  text("HERE" + i*10, width*0.2, height*(i/10));
+  //  println("INSIDE draw" + i);
+  //}//shows up for a couple milisecs
+  text("100", width*0.01, height*0.01+10);
+  rect(0, height*0.01-5, 15, 2);
+  text("90", width*0.01, height*0.1+10);
+  rect(0, height*0.1, 15, 2);
+  text("80", width*0.01, height*0.2+10);
+  rect(0, height*0.2, 15, 2);
+  text("70", width*0.01, height*0.3+10);
+  rect(0, height*0.3, 15, 2);
+  text("60", width*0.01, height*0.4+10);
+  rect(0, height*0.4, 15, 2);
+  text("50", width*0.01, height*0.5+10);
+  rect(0, height*0.5, 15, 2);
+  text("40", width*0.01, height*0.6+10);
+  rect(0, height*0.6, 15, 2);
+  text("30", width*0.01, height*0.7+10);
+  rect(0, height*0.7, 15, 2);
+  text("20", width*0.01, height*0.8+10);
+  rect(0, height*0.8, 15, 2);
+  text("10", width*0.01, height*0.9+10);
+  rect(0, height*0.9, 15, 2);
+  text("0", width*0.01, height-4);
+  rect(0, height-5, 15, 2);
 
   ///Draw Text Log
   // Borderbox
@@ -520,7 +565,6 @@ class Glow {
 
 //Touch
 class Smear{
-  
   float x,y,w,h;
   
   Smear(float xin, float yin, float win, float hin){
