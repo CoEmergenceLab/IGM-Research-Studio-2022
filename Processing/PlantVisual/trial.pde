@@ -61,6 +61,13 @@ Block[] block = new Block[int(blocks)];
 float springS = 0.01;
 Star[] star = new Star[int(stars)];
 
+//Keeping track of all data coming in for "end-of-day" printout
+ArrayList<float[]> compA; //All data from Arduino
+ArrayList<int[]> compAD;
+ArrayList<float[]> compS; //All data from Sentiment Analysis
+ArrayList<int[]> compSD;
+int read;
+
 void setup() {
   //size(1000, 800);
   //1920X1080p
@@ -81,9 +88,7 @@ void setup() {
   /* start oscP5, listening for incoming messages at port 57001 */
   oscP5 = new OscP5(this, receivePort);
 
-  //Moisture texts
-
-
+  //Moisture
   d = new Drops[500];
   for (int i=0; i<500; i++) {
     d[i] = new Drops();
@@ -101,6 +106,10 @@ void setup() {
   fill(255);
   textSize(24);
   text("Number of Times Touched: 0", width*0.8, height*0.05);
+  
+  compA = new ArrayList<float[]>();
+  compS = new ArrayList<float[]>();
+  read = 0;
 }//setup
 
 void draw() {
@@ -137,16 +146,14 @@ void draw() {
         count -= 1;
       }
       if (item.length() <= 70) {
-        text(item, width*.8, height*.75+(i*30));
-        
-      } else {
-        //if(item.length() > 25){
+         //if(item.length() > 25){
         //  char[] c = item.toCharArray();
         //  if(item.length()>50){
         //    text(item, width*.8, height*.75+(i*30));
         //  }else{
-        //    text(item, width*.8, height*.75+(i*30));
+            text(item, width*.8, height*.75+(i*30));
         //  }
+      } else {
         println("Too Long, Try Again.");
       }
     }//for count>0
@@ -256,6 +263,20 @@ void draw() {
   //    popMatrix();
   //  }
   //}//Negative
+  
+  
+  //Check if messaging conditions are met
+  for(int i=0; i<loaded; i++){
+    //for(int j=0; j<3, j++) {
+      //Moisture
+      if(compA.get(i)[0] > 5){
+      
+        print();
+      }
+    //}
+  }
+  
+  
 }//draw
 
 // Load JSON file
@@ -291,6 +312,26 @@ void loadData() {
     intensity = 30;
   }//light
   
+  compA.add(new float[]{moisture, light, touch});
+  if(moisture > 70){  //High moisture
+    if (light<333){
+      compAD.add(new int[]{1, -1}); 
+    } else if (light>666){  //High light
+      compAD.add(new int[]{1, 1}); 
+    } 
+  }
+  
+  if(moisture<30){  //Low moisture
+    if (light<=333) {  //Low light
+      compAD.add(new int[]{-1, -1}); 
+    } else if (light>666){  //High light
+      compAD.add(new int[]{-1, 1});
+    } 
+  }
+ 
+  print(compA.get(loaded)); //Print the newly added float array
+  print(", " + compA.get(loaded)[0] + "/n");  //Print the moisture element of the array
+  
   //Touch
   loaded += 1;
 }//loadData
@@ -316,7 +357,7 @@ void oscEvent(OscMessage theOscMessage) {
       jsonSenti = parseJSONObject(s);
       println(jsonSenti);
 
-      // Getting positive, neutral, negative sentiments
+      //Getting positive, neutral, negative sentiments
       String pos = jsonSenti.getString("POS");
       String neu = jsonSenti.getString("NEU");
       String neg = jsonSenti.getString("NEG");
@@ -330,6 +371,28 @@ void oscEvent(OscMessage theOscMessage) {
       //circles = 70;
       //blocks = 20;
       //stars = 10;
+      
+      //Add read data to compile arrayList
+       compS.add(new float[]{circles, blocks, stars});
+       if(moisture > 70){  //High moisture
+         if (light<333){
+            compSD.add(new int[]{1, -1}); 
+          } else if(light>666){  //High light
+            compSD.add(new int[]{1, 1}); 
+          } 
+        }
+        
+        if(moisture<30){  //Low moisture
+          if (light<=333) {  //Low light
+            compSD.add(new int[]{-1, -1}); 
+          } else if (light>666){  //High light
+            compSD.add(new int[]{-1, 1});
+          } 
+        }
+        
+       print(compS.get(read));  //Print the newly added float array
+       print(", " + compS.get(read)[0] + "/n");  //Print the positive element of the array
+       read += 0;
 
       //Positive
       for (int i=0; i< circles; i++) {
@@ -379,7 +442,7 @@ class Drops {
     ellipseX  = 0;
     ellipseY  = 0;
     //println("Moisture: " + moisture);
-    endPos = (height*(100-moisture)/100)-random(250);
+    endPos = (height*((100-moisture)/100))-100+random(250);
   }//init
 
   //Change raining speed based on Moisture data
