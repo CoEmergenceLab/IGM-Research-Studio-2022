@@ -109,7 +109,7 @@ def build_app():
 
             panel = MainPanel(self)
             self.Center()
-
+            self.Show(True)
             self.ShowFullScreen(True)
 
         def OnExit(self, e):
