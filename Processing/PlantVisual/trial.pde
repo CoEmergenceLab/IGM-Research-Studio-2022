@@ -338,41 +338,45 @@ void loadData() {
 
 /* incoming osc message are forwarded to the oscEvent method. */
 void oscEvent(OscMessage theOscMessage) {
-  print("### received an osc message.");
-  print(" addrpattern: " + theOscMessage.addrPattern());
-  println(" typetag: " + theOscMessage.typetag());
-
-  /* check if theOscMessage has the address pattern we are looking for. */
-  if (theOscMessage.checkAddrPattern("/sentiment") == true) {
-    /* check if the typetag is the right one.
-     "ifs" means integer, float, string respectively
-     https://sojamo.de/libraries/oscp5/examples/oscP5parsing/oscP5parsing.pde
-     */
-    if (theOscMessage.checkTypetag("s")) {
-      // parse theOscMessage and extract the values from the osc message arguments.
-      String s = theOscMessage.get(0).stringValue();
-      println(s);
-
-      //split string into values
-      jsonSenti = parseJSONObject(s);
-      println(jsonSenti);
-
-      //Getting positive, neutral, negative sentiments
-      String pos = jsonSenti.getString("POS");
-      String neu = jsonSenti.getString("NEU");
-      String neg = jsonSenti.getString("NEG");
-
-      //Parse strings to float
-      circles = Float.parseFloat(pos)*100;
-      blocks = Float.parseFloat(neu)*100;
-      stars = Float.parseFloat(neg)*10;
-
-      //Test
-      //circles = 70;
-      //blocks = 20;
-      //stars = 10;
-      
-      //Add read data to compile arrayList
+    print("### received an osc message.");
+    print(" addrpattern: " + theOscMessage.addrPattern());
+    println(" typetag: " + theOscMessage.typetag());
+  
+    /* check if theOscMessage has the address pattern we are looking for. */
+    if (theOscMessage.checkAddrPattern("/sentiment") == true) {
+      /* check if the typetag is the right one.
+       "ifs" means integer, float, string respectively
+       https://sojamo.de/libraries/oscp5/examples/oscP5parsing/oscP5parsing.pde
+       */
+      if (theOscMessage.checkTypetag("s")) {
+        // parse theOscMessage and extract the values from the osc message arguments.
+        String s = theOscMessage.get(0).stringValue();
+        println(s);
+  
+        //split string into values
+        jsonSenti = parseJSONObject(s);
+        println(jsonSenti);
+  
+        //Getting positive, neutral, negative sentiments
+        String pos = jsonSenti.getString("POS");
+        String neu = jsonSenti.getString("NEU");
+        String neg = jsonSenti.getString("NEG");
+  
+        //Parse strings to float
+        circles = Float.parseFloat(pos)*100;
+        blocks = Float.parseFloat(neu)*100;
+        stars = Float.parseFloat(neg)*10;
+  
+        //Test
+        //circles = 70;
+        //blocks = 20;
+        //stars = 10;
+        
+        //Add read data to compile arrayList
+        if(compSD == null) {
+          compSD = new ArrayList<int[]>();
+        }
+        
        compS.add(new float[]{circles, blocks, stars});
        if(moisture > 70){  //High moisture
          if (light<333){
@@ -390,40 +394,39 @@ void oscEvent(OscMessage theOscMessage) {
           } 
         }
         
-       print(compS.get(read));  //Print the newly added float array
-       print(", " + compS.get(read)[0] + "/n");  //Print the positive element of the array
-       read += 0;
-
-      //Positive
-      for (int i=0; i< circles; i++) {
-        circle[i] = new Circle(random(width), random(height), random(30, 70), i, circle);
-        println(circle[i]);
-      }
-      fill(255, 255, 0, 204);
-
-      //Neutral
-      for (int i=0; i< blocks; i++) {
-        block[i] = new Block(random(width), random(height), random(30, 70), i, block);
-      }
-      fill(0, 255, 0, 204);
-
-      //Negative
-      fill(255, 0, 0, 204);
-      for (int i=0; i< stars; i++) {
-        star[i] = new Star(random(width), random(height), random(30, 70), 3);
-      }
-      fill(255);
-
-      //Text entered
-      String input = jsonSenti.getString("input");
-
-      //Add new input to textlog
-      textLog.append(input);
-      count += 1;
-
-      return;
-    }  //check tag
-  } //check pattern
+         read += 0;
+  
+        //Positive
+        circle = new Circle[int(circles)];
+        for (int i=0; i< circles - 1; i++) {
+          circle[i] = new Circle(random(width), random(height), random(30, 70), i, circle);
+        }
+        fill(255, 255, 0, 204);
+  
+        //Neutral
+        block = new Block[int(blocks)];
+        for (int i=0; i< blocks - 1; i++) {
+          block[i] = new Block(random(width), random(height), random(30, 70), i, block);
+        }
+        fill(0, 255, 0, 204);
+  
+        //Negative
+        star = new Star[int(stars)];
+        fill(255, 0, 0, 204);
+        for (int i=0; i< stars - 1; i++) {
+          star[i] = new Star(random(width), random(height), random(30, 70), 3);
+        }
+        fill(255);
+        //Text entered
+        String input = jsonSenti.getString("input");
+  
+        //Add new input to textlog
+        textLog.append(input);
+        count += 1;
+  
+        return;
+      }  //check tag
+    } //check pattern
 }//osc
 
 //Moisture - Drops Class
@@ -553,7 +556,7 @@ class Circle {
   }//Circle Construct
 
   void collide() {
-    for (int i=id+1; i<circles; i++) {
+    for (int i=id+1; i<others.length - 1; i++) {
       float dx = others[i].x - x;
       float dy = others[i].y - y;
       float distance = sqrt(dx*dx + dy*dy);
@@ -625,7 +628,7 @@ class Block {
   }//Block Construct
 
   void collide() {
-    for (int i=id+1; i<blocks; i++) {
+    for (int i=id+1; i<others.length; i++) {
       float dx = others[i].x - x;
       float dy = others[i].y - y;
       float distance = sqrt(dx*dx + dy*dy);
