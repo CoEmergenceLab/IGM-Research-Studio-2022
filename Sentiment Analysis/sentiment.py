@@ -53,7 +53,7 @@ def build_app():
             self.input = wx.TextCtrl(self, style=wx.TE_MULTILINE|wx.TE_NO_VSCROLL, size=wx.Size(800, 100), pos=(550,600))
             self.input.SetMaxLength(70)
             print(self.input.SetMargins(50))
-            
+
             for _ in range(5):
                 self.input.SetFont(self.input.GetFont().Larger())
 
@@ -94,7 +94,7 @@ def build_app():
                 text += self.input.GetLineText(i)
 
             return text
-        
+
         def onKey(self, event):
             key_code = event.GetKeyCode()
             if key_code == wx.WXK_ESCAPE:
@@ -109,7 +109,7 @@ def build_app():
 
             panel = MainPanel(self)
             self.Center()
-
+            self.Show(True)
             self.ShowFullScreen(True)
 
         def OnExit(self, e):
@@ -140,5 +140,5 @@ if __name__ == "__main__":
         def __init__(self, phrase, sentiment):
             self.phrase = phrase
             self.sentiment = sentiment
-    
+
     build_app()
