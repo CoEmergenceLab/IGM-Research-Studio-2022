@@ -39,7 +39,6 @@ int glowCount;
 
 //Touch
 int prev;
-//ArrayList<Shape> shapes;
 Shape[] shape = new Shape[int(touch)];
 PShape smear;
 int loaded;
@@ -92,18 +91,6 @@ void setup() {
   oscP5 = new OscP5(this, receivePort);
 
   //Moisture
-  //Text and data 1-100
-  //stroke(255);
-  fill(255);
-  textSize(24);
-  
-   //text("HERE", width*0.2, height*0.2);
-  //for(int i=0; i<11; i++) {
-  //  //rect(0, height-(i*10), 530, 430);
-  //  text("HERE" + i*10, width*0.2, height-height*(i*10));
-  //  println("INSIDE");
-  //}
-  
   d = new Drops[500];
   for (int i=0; i<500; i++) {
     d[i] = new Drops();
@@ -114,15 +101,11 @@ void setup() {
 
   //Touch
   prev = 0;
-  //shapes = new ArrayList<Shape>();
   smear = loadShape("smear.svg");
 
   fill(255);
   textSize(24);
   text("Number of Times Touched: 0", width*0.8, height*0.05);
-  
-  //stars
-  //star = new ArrayList();
   
   //Compile data
   compA = new ArrayList<int[]>();
@@ -144,7 +127,8 @@ void draw() {
   noStroke();
   fill(255);
   textSize(24);  
-
+  
+  //Moisture - numerical Measurement
   text("100", width*0.01, height*0.01+10);
   rect(0, height*0.01-5, 15, 2);
   text("90", width*0.01, height*0.1+10);
@@ -186,7 +170,7 @@ void draw() {
 
     for (int i = 0; i < count; i++) {
       String item = textLog.get(i);
-      if (textLog.size() > 11) {
+      if (textLog.size() > 12) {
         textLog.remove(0);
         count -= 1;
       }
@@ -212,11 +196,9 @@ void draw() {
   for (int i=0; i<500; i++) {
      //d[i] = new Drops();
     if (d[i].y>d[i].endPos) {
-      //println("End rain: " + d[i]);
       d[i].end();
     } else {
       d[i].display();
-      //println("Display rain: " + d[i]);
     }
   }//for
   fill(255);
@@ -246,7 +228,6 @@ void draw() {
   for (int i=0; i<16; i++) {
     g[i] = new Glow(random(width), random(height), random(1));
     glowCount+=1;
-    //println(g[i]);
     g[i].display();
   }//for
 
@@ -264,21 +245,6 @@ void draw() {
       sm.display();
     }
   }
-    //for(int i=0; i<shapes.size(); i++){
-    //  //Get values from each list in arraylist
-    //  //shape(shape.get(i)[0], shape.get(i)[1], shape.get(i)[2], shape.get(i)[3], shape.get(i)[4]);
-    //  //shapes.display();
-
-      
-    //  //shape(temp.get(i), random(width), random(height), 100, 50);
-    //}
-    
-      ////Display each smear
-      //for (Shape s : touch) {
-      //  s.display();
-      //}
-    
-    
 
   //Positive Emotion
   if (circle != null) {
@@ -355,8 +321,7 @@ void loadData() {
     }
   }//touch
   
-  //Compile
-  //A
+  //Compile - Arduino
   if(moisture > 70){  //High moisture
     if (light<333){  //Low light
       compA.add(new int[]{1, -1}); 
@@ -370,8 +335,6 @@ void loadData() {
       compA.add(new int[]{-1, 1});
     } 
   }
-  
-  //Touch
   loaded += 1;
 }//loadData
 
@@ -405,23 +368,14 @@ void oscEvent(OscMessage theOscMessage) {
         circles = Float.parseFloat(pos)*100;
         blocks = Float.parseFloat(neu)*100;
         stars = Float.parseFloat(neg)*100;
-        
-        println("C: " + circles + " S: " + stars);
-        //Test
-        //circles = 70;
-        //blocks = 20;
-        //stars = 10;
   
         //Add read data to compile arrayList
        if(circles>60 && stars<15){  
             compS.add(int(1)); 
         }
-        
         if(circles<15 && stars>60){  
             compS.add(-1); 
         }
-      
-        read += 0;
   
         //Positive
         circle = new Circle[int(circles)];
@@ -473,7 +427,6 @@ class Drops {
     speed = random (1, 4) * 2;
     ellipseX  = 0;
     ellipseY  = 0;
-    //println("Moisture: " + moisture);
     endPos = (height*((100-moisture)/100))-100+random(250);
   }//init
 
@@ -562,7 +515,6 @@ class Shape{
   }//Shape Constructor
   
   void display(){
-    //shape(pshape name, x, y, width, height)
     shape(smear,x,y,w,h);
   }//display
 }//Shape
@@ -683,15 +635,6 @@ class Block {
         others[i].vy += ay;
       }
       
-      //Going under and right teleports to the other side
-      //if (x+d<d || x>width-d) {
-      //  x = -vx/2;
-      //}
-     
-      //if (y-d<d|| y>height-d) {
-      //  y = -vy/2;
-      //}
-      
       //Slowly bounce off wall
       if (x<d+1) {
         float ax = 0.05 * spring;
@@ -774,3 +717,22 @@ class Star {
     popMatrix();
   }//display
 }//Star
+
+//Give a report based on all the data received
+void compile(){
+  
+  //Show message based on data compiled
+  textSize(80);
+  text("Thanks for talking to me", width/2.8, height/4);
+  
+  //textSize(60);
+  text("I really liked that people respected my personal space.", width/3.4, height/3);
+  //text("But I really want people to stop touching me.", width/3.4, height/3);
+  //text("!!", width/2, height-200);
+  ////text("Please stop watering me! I'm drowning!", width/3.2, height/2.4);
+  //text("Please water me! I'm dehydrated!", width/2.9, height/2.4);
+  //text("I also need more light", width/2.5, height/2);
+  ////text("I also got plenty of light!", width/2.6, height/2);
+  ////text("I hope people stop being mean to me", width/3, height/1.73);
+  //text("I enjoy people talking to me, they are very insightful.", width/3.7, height/1.73);
+}
