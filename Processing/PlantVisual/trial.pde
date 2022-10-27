@@ -5,10 +5,8 @@
 import processing.serial.*;
 import oscP5.*;
 import netP5.*;
-import java.util.Random;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
 
 Serial plantPort;
 String val;
@@ -67,9 +65,9 @@ Star[] star = new Star[int(stars)];
 //Keeping track of all data coming in for "end-of-day" printout
 ArrayList<int[]> compA;//All data from Arduino
 ArrayList<Integer> compS; //All data from Sentiment Analysis
+int loaded;
 int water;
 int li;
-int to;
 int sentiment;
 
 void setup() {
@@ -112,7 +110,6 @@ void setup() {
   compS = new ArrayList<>();
   water = 0;
   li = 0;
-  to = 0;
   sentiment = 0;
 }//setup
 
@@ -276,7 +273,9 @@ void draw() {
   }
 
   //Check if "end-of-day" printout is requested
-
+  if(textLog.get(count-1) == "end-of-day") {//TYPE THIS IN TEXTLOG TO PRINT REPORT!!!!!!!
+    compile();
+  }
 }//draw
 
 // Load JSON file
@@ -330,6 +329,8 @@ void loadData() {
       compA.add(new int[]{-1, 1});
     } 
   }
+  
+  loaded += 1;
 }//loadData
 
 /* incoming osc message are forwarded to the oscEvent method. */
@@ -715,62 +716,41 @@ class Star {
 //Give a report based on all the data received
 void compile(){
   
-  //compA = new ArrayList<int[]>();
-  //compS = new ArrayList<>();
-  
-  //Compile - Arduino
-  //if(moisture > 70){  //High moisture
-  //  if (light<333){  //Low light
-  //    compA.add(new int[]{1, -1}); 
-  //  } else if (light>666){  //High light
-  //    compA.add(new int[]{1, 1}); 
-  //  } 
-  //}else if(moisture<30){  //Low moisture
-  //  if (light<=333) {  //Low light
-  //    compA.add(new int[]{-1, -1}); 
-  //  } else if (light>666){  //High light
-  //    compA.add(new int[]{-1, 1});
-  //  } 
-  //}
-  
-  for(int i[]: compA) {
-    println(Arrays.toString(i)); //print out all arrays in the ArrayList
-    
-    
+  //Calculate gathered data
+  for(int i=0; i<loaded; i++){
+    water += compA.get(i)[0];
+    li += compA.get(i)[1];
   }
-  
-  //int water;
-  //int li;
-  //int to;
-  //int sentiment;
+  for(int i=0; i<count-1; i++){
+    sentiment += compS.get(i) ;
+  }
    
   //Show message based on data compiled
   textSize(80);
   text("Thanks for talking to me", width/2.8, height/4);
   
-  textSize(60);
-  
-  if(to == 1) {
+  textSize(60);  
+  if(touch<100) {
     text("I really liked that people respected my personal space.", width/3.85, height/3);
-  }else if(to == -1){
-     text("But I really want people to stop touching me.", width/3.4, height/3);
+  }else{
+    text("But I really want people to stop touching me.", width/3.4, height/3);
   }
   
-  if(li == 1) {
+  if(li>0) {
     text("I also got plenty of light!", width/2.6, height/2);
-  }else if(li == -1){
-      text("I also need more light", width/2.5, height/2);
+  }else{
+    text("I also need more light", width/2.5, height/2);
   }
   
-  if(water == 1) {
+  if(water>0) {
     text("Please water me! I'm dehydrated!", width/2.9, height/2.4);
-  }else if(water == -1){
-     text("Please stop watering me! I'm drowning!", width/3.2, height/2.4);
+  }else{
+    text("Please stop watering me! I'm drowning!", width/3.2, height/2.4);
   }
   
-  if(sentiment == 1) {
+  if(sentiment>5) {
     text("I enjoy people talking to me, they are very insightful.", width/3.7, height/1.73); //Good
-  }else if(sentiment == -1){
-        text("I hope people stop being mean to me", width/3, height/1.73); //Bad
+  }else{
+    text("I hope people stop being mean to me", width/3, height/1.73); //Bad
   }
 }
