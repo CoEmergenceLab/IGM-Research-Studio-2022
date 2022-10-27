@@ -74,8 +74,8 @@ void setup() {
   fullScreen();
 
   //Connect to serial port
-  //println(Serial.list()); //This may need to be changed depending on the computer used!!!!!
-  //plantPort = new Serial(this, Serial.list()[0], 9600);
+  println(Serial.list()); //This may need to be changed depending on the computer used!!!!!
+  plantPort = new Serial(this, Serial.list()[0], 9600);
   //loadData();
 
   textLog = new StringList();
@@ -127,13 +127,13 @@ void setup() {
 void draw() {
   background(0);
 
-  //if(plantPort.available() > 0){
-  //  val = plantPort.readStringUntil('\n');
-  //  //println(val);
-  //  if(val != null){
-  //     loadData();
-  //  }
-  //}//plantPort
+  if(plantPort.available() > 0){
+    val = plantPort.readStringUntil('\n');
+    //println(val);
+    if(val != null){
+       loadData();
+    }
+  }//plantPort
 
   noStroke();
   fill(255);
@@ -597,6 +597,9 @@ class Circle {
     r = d/2;
     id =idin;
     others = oin;
+    
+    vy += random(-2,2);
+    vx += random(-2,2);
   }//Circle Construct
 
   void collide() {
@@ -616,19 +619,37 @@ class Circle {
         others[i].vx += ax;
         others[i].vy += ay;
       }
-      if (x<=0) {
+      //if (x<=0) {
+      //  float ax = 0.05 * spring;
+      //  vx += ax;
+      //}
+      //if (x>=width) {
+      //  float ax = 0.05 * spring;
+      //  vx -= ax;
+      //}
+      //if (y<=0) {
+      //  float ay = 0.05 * spring;
+      //  vy += ay;
+      //}
+      //if (y>=height) {
+      //  float ay = 0.05 * spring;
+      //  vy -= ay;
+      //}
+      
+        //Slowly bounce off wall
+      if (x<d+1) {
         float ax = 0.05 * spring;
         vx += ax;
       }
-      if (x>=width) {
+      if (x>width-d-1) {
         float ax = 0.05 * spring;
         vx -= ax;
       }
-      if (y<=0) {
+      if (y<d+1) {
         float ay = 0.05 * spring;
         vy += ay;
       }
-      if (y>=height) {
+      if (y>height-d-1) {
         float ay = 0.05 * spring;
         vy -= ay;
       }
@@ -651,6 +672,8 @@ class Circle {
   }//move
 
   void display() {
+    fill(255,255,0);
+    stroke(255,255,0);
     ellipse(x, y, d, d);
   }//display
 }//Circle
@@ -669,6 +692,11 @@ class Block {
     r = d/2;
     id =idin;
     others = oin;
+    
+    vy += random(-1,1);
+    vx += random(-1,1);
+    //springB = random(-0.1,0.1);
+    
   }//Block Construct
 
   void collide() {
@@ -681,27 +709,38 @@ class Block {
         float angle = atan2(dy, dx);
         float targetX = x + cos(angle) * minDist;
         float targetY = y + sin(angle) * minDist;
-        float ax = (targetX - others[i].x) * spring;
-        float ay = (targetY - others[i].y) * spring;
+        float ax = (targetX - others[i].x) * springB;
+        float ay = (targetY - others[i].y) * springB;
         vx -= ax;
         vy -= ay;
         others[i].vx += ax;
         others[i].vy += ay;
       }
-      if (x<=0) {
-        float ax = 0.05 * springB;
+      
+      //Going under and right teleports to the other side
+      //if (x+d<d || x>width-d) {
+      //  x = -vx/2;
+      //}
+     
+      //if (y-d<d|| y>height-d) {
+      //  y = -vy/2;
+      //}
+      
+      //Slowly bounce off wall
+      if (x<d+1) {
+        float ax = 0.05 * spring;
         vx += ax;
       }
-      if (x>=width) {
-        float ax = 0.05 * springB;
+      if (x>width-d-1) {
+        float ax = 0.05 * spring;
         vx -= ax;
       }
-      if (y<=0) {
-        float ay = 0.05 * springB;
+      if (y<d+1) {
+        float ay = 0.05 * spring;
         vy += ay;
       }
-      if (y>=height) {
-        float ay = 0.05 * springB;
+      if (y>height-d-1) {
+        float ay = 0.05 * spring;
         vy -= ay;
       }
     }//for
@@ -723,7 +762,9 @@ class Block {
   }//move
 
   void display() {
-    rect(x, y, d, d, 28); //Rounded Rect
+    stroke(0,255,0);
+    fill(0,255,0);
+    rect(x, y, d, d, 10); //Rounded Rect
   }//display
 }//Block
 
