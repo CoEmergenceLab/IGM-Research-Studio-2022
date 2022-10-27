@@ -162,7 +162,7 @@ void draw() {
   textSize(30);
   fill(255);
   text("Text Log", width*.8, height*.75-40);
-
+  
   //Messages
   if (count>0) {
     textSize(24);
@@ -170,19 +170,16 @@ void draw() {
 
     for (int i = 0; i < count; i++) {
       String item = textLog.get(i);
+      
+      //Remove first message in the textLog when it reaches the max number of messages
       if (textLog.size() > 12) {
         textLog.remove(0);
         count -= 1;
       }
-      if (item.length() <= 70) {
-         //if(item.length() > 25){
-        //  char[] c = item.toCharArray();
-        //  if(item.length()>50){
-        //    text(item, width*.8, height*.75+(i*30));
-        //  }else{
+      
+      //Only print when the length of the message is less than 25 chars
+      if (item.length() <= 25) {
             text(item, width*.8, height*.75+(i*30));
-            touch=1;
-        //  }
       } else {
         println("Too Long, Try Again.");
       }
@@ -213,11 +210,11 @@ void draw() {
     float y = map(noise(xoff, yoff), 0, 1, range-100, range); // Option #1: 2D Noise
     stroke(0, 0, 255);
     strokeWeight(4);
-    //fill(40,80,245);
     noFill();
     vertex(x, y);  //Set the vertex
     xoff += 0.02;  //Increment x dimension for noise
   }//for
+  
   //Increment y dimension for noise
   yoff += 0.01;
   vertex(width, height);
@@ -273,8 +270,10 @@ void draw() {
   }
 
   //Check if "end-of-day" printout is requested
-  if(textLog.get(count-1) == "end-of-day") {//TYPE THIS IN TEXTLOG TO PRINT REPORT!!!!!!!
-    compile();
+  if(count>0){
+    if(textLog.get(count-1) == "end-of-day") {//TYPE THIS IN TEXTLOG TO PRINT REPORT!!!!!!!
+      compile();
+    }
   }
 }//draw
 
