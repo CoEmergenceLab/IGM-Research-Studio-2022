@@ -51,7 +51,7 @@ def build_app():
             sizer.Add(sendButton, 0, wx.ALL, 5)
 
             self.input = wx.TextCtrl(self, style=wx.TE_MULTILINE|wx.TE_NO_VSCROLL, size=wx.Size(800, 100), pos=(550,600))
-            self.input.SetMaxLength(70)
+            self.input.SetMaxLength(INPUT_MAX_CHAR)
             print(self.input.SetMargins(50))
 
             for _ in range(5):
@@ -141,4 +141,5 @@ if __name__ == "__main__":
             self.phrase = phrase
             self.sentiment = sentiment
 
+    INPUT_MAX_CHAR = 20
     build_app()
